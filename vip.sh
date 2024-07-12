@@ -18,6 +18,15 @@ SQUID_PASS=$2
 echo "Cài đặt các thư viện cần thiết..."
 sudo apt-get install -y qrencode imagemagick
 
+# Tạo thư mục cấu hình nếu chưa tồn tại
+sudo mkdir -p /etc/wireguard
+
+# Tắt các thông báo tương tác và không yêu cầu xác nhận
+export DEBIAN_FRONTEND=noninteractive
+sudo apt-get install -y debconf-utils
+echo "unattended-upgrades unattended-upgrades/enable_auto_updates boolean true" | sudo debconf-set-selections
+echo "unattended-upgrades unattended-upgrades/enable_auto_updates boolean true" | sudo debconf-set-selections
+
 # Hàm để cài đặt Squid Proxy
 function installsquid() {
     echo "Bắt đầu cài đặt Squid Proxy..."
@@ -50,13 +59,13 @@ function installwireguard() {
     
     # Chạy script cài đặt WireGuard với các tùy chọn tự động
     echo "Cài đặt WireGuard với DNS của Google, port 3128 và tên client là client..."
-    echo -e "3128\n2\nclient\n" | DEBIAN_FRONTEND=noninteractive sudo bash wireguard-install.sh
-    
+    echo -e "3128\n2\nclient\n" | sudo bash wireguard-install.sh
+
     # Sau khi cài đặt, chỉnh sửa cấu hình để sử dụng DNS của Google
     echo "Đang cấu hình WireGuard để sử dụng DNS của Google..."
     sudo sed -i 's/^DNS = .*/DNS = 8.8.8.8, 8.8.4.4/' /etc/wireguard/wg0.conf
     
-    # Khởi động lại dịch vụ WireGuard
+    # Khởi động lại dịch vụ WireGuard mà không yêu cầu tương tác
     sudo systemctl restart wg-quick@wg0
     
     echo "Cài đặt WireGuard hoàn tất!"
@@ -90,6 +99,10 @@ function installwireguard() {
         exit 1
     fi
 }
+
+# Bỏ qua các thông báo về các dịch vụ sử dụng thư viện lỗi thời
+sudo sed -i '/^Unattended-Upgrade::Auto-Upgrade-Enabled/d' /etc/apt/apt.conf.d/20auto-upgrades
+sudo sed -i '/^APT::Periodic::Update-Package-Lists/d' /etc/apt/apt.conf.d/10periodic
 
 # Cài đặt Squid Proxy
 installsquid
