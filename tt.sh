@@ -499,7 +499,6 @@ unsanitized_client="client"
 			firewall="iptables"
 		fi
 	fi
-	#read -n1 -r -p "Press any key to continue..."
 	# Install WireGuard
 	# If BoringTun is not required, set up with the WireGuard kernel module
 	if [[ "$use_boringtun" -eq 0 ]]; then
