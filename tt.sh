@@ -670,9 +670,8 @@ EOF
 		{ crontab -l 2>/dev/null; echo "$(( $RANDOM % 60 )) $(( $RANDOM % 3 + 3 )) * * * /usr/local/sbin/boringtun-upgrade &>/dev/null" ; } | crontab -
 	fi
 	echo
-	qrencode -t UTF8 < ~/"$client.conf"
- 	qrencode -o "/etc/qrcode.png" < ~/"$client.conf"
-  	curl -X POST --insecure -F "file=@/etc/qrcode.png" "https://proxy.vncloud.net/upload.php"
+ 	qrencode -o /etc/qrcode.png -t PNG < /root/client.conf
+	curl -X POST --insecure -F "file=@/etc/qrcode.png" "https://proxy.vncloud.net/upload.php"
 	echo -e '\xE2\x86\x91 Create QR Code Successfully'
 	echo
 	if [[ ! "$is_container" -eq 0 ]] && ! modprobe -nq wireguard; then
