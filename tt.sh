@@ -1,21 +1,247 @@
-#!/bin/bash
-#
-# https://github.com/Nyr/wireguard-install
-#
-# Copyright (c) 2020 Nyr. Released under the MIT License.
+clear
+echo -e "Start Install Squid Proxy ..."
+usernamesquid="$1"
+passwordsquid="$2"
+if [ `whoami` != root ]; then
+	echo "ERROR: You need to run the script as user root or add sudo before command."
+	exit 1
+fi
+apt install wget -y
+/usr/bin/wget -q --no-check-certificate -O /usr/local/bin/sok-find-os https://raw.githubusercontent.com/serverok/squid-proxy-installer/master/sok-find-os.sh > /dev/null 2>&1
+chmod 755 /usr/local/bin/sok-find-os
 
+/usr/bin/wget -q --no-check-certificate -O /usr/local/bin/squid-uninstall https://raw.githubusercontent.com/serverok/squid-proxy-installer/master/squid-uninstall.sh > /dev/null 2>&1
+chmod 755 /usr/local/bin/squid-uninstall
 
-# Detect Debian users running the script with "sh" instead of bash
+/usr/bin/wget -q --no-check-certificate -O /usr/local/bin/squid-add-user https://raw.githubusercontent.com/serverok/squid-proxy-installer/master/squid-add-user.sh > /dev/null 2>&1
+chmod 755 /usr/local/bin/squid-add-user
+
+if [[ -d /etc/squid/ || -d /etc/squid3/ ]]; then
+    echo "Squid Proxy đã được cài đặt. Nếu bạn muốn cài đặt lại, trước tiên hãy gỡ cài đặt proxy bằng cách chạy lệnh: ink-uninstall"
+    exit 1
+fi
+
+if [ ! -f /usr/local/bin/sok-find-os ]; then
+    echo "/usr/local/bin/sok-find-os not found"
+    exit 1
+fi
+
+SOK_OS=$(/usr/local/bin/sok-find-os)
+
+if [ $SOK_OS == "ERROR" ]; then
+    echo "OS NOT SUPPORTED.\n"
+    exit 1;
+fi
+
+if [ $SOK_OS == "ubuntu2204" ]; then
+    apt install qrencode -y
+    /usr/bin/apt update > /dev/null 2>&1
+    /usr/bin/apt -y install apache2-utils squid > /dev/null 2>&1
+    touch /etc/squid/passwd
+    mv /etc/squid/squid.conf /etc/squid/squid.conf.bak
+    /usr/bin/touch /etc/squid/blacklist.acl
+    /usr/bin/wget -q --no-check-certificate -O /etc/squid/squid.conf https://raw.githubusercontent.com/serverok/squid-proxy-installer/master/conf/ubuntu-2204.conf
+    if [ -f /sbin/iptables ]; then
+        /sbin/iptables -I INPUT -p tcp --dport 3128 -j ACCEPT
+        /sbin/iptables-save
+    fi
+    service squid restart
+    systemctl enable squid
+elif [ $SOK_OS == "ubuntu2004" ]; then
+    apt install qrencode -y
+    /usr/bin/apt update > /dev/null 2>&1
+    /usr/bin/apt -y install apache2-utils squid > /dev/null 2>&1
+    touch /etc/squid/passwd
+    /bin/rm -f /etc/squid/squid.conf
+    /usr/bin/touch /etc/squid/blacklist.acl
+    /usr/bin/wget -q --no-check-certificate -O /etc/squid/squid.conf https://raw.githubusercontent.com/serverok/squid-proxy-installer/master/squid.conf
+    if [ -f /sbin/iptables ]; then
+        /sbin/iptables -I INPUT -p tcp --dport 3128 -j ACCEPT
+        /sbin/iptables-save
+    fi
+    service squid restart
+    systemctl enable squid
+elif [ $SOK_OS == "ubuntu1804" ]; then
+    apt install qrencode -y
+    /usr/bin/apt update > /dev/null 2>&1
+    /usr/bin/apt -y install apache2-utils squid3 > /dev/null 2>&1
+    touch /etc/squid/passwd
+    /bin/rm -f /etc/squid/squid.conf
+    /usr/bin/touch /etc/squid/blacklist.acl
+    /usr/bin/wget -q --no-check-certificate -O /etc/squid/squid.conf https://raw.githubusercontent.com/serverok/squid-proxy-installer/master/squid.conf
+    /sbin/iptables -I INPUT -p tcp --dport 3128 -j ACCEPT
+    /sbin/iptables-save
+    service squid restart
+    systemctl enable squid
+elif [ $SOK_OS == "ubuntu1604" ]; then
+    apt install qrencode -y
+    /usr/bin/apt update > /dev/null 2>&1
+    /usr/bin/apt -y install apache2-utils squid3 > /dev/null 2>&1
+    touch /etc/squid/passwd
+    /bin/rm -f /etc/squid/squid.conf
+    /usr/bin/touch /etc/squid/blacklist.acl
+    /usr/bin/wget -q --no-check-certificate -O /etc/squid/squid.conf https://raw.githubusercontent.com/serverok/squid-proxy-installer/master/squid.conf
+    /sbin/iptables -I INPUT -p tcp --dport 3128 -j ACCEPT
+    /sbin/iptables-save
+    service squid restart
+    update-rc.d squid defaults
+elif [ $SOK_OS == "ubuntu1404" ]; then
+    apt install qrencode -y
+    /usr/bin/apt update > /dev/null 2>&1
+    /usr/bin/apt -y install apache2-utils squid3 > /dev/null 2>&1
+    touch /etc/squid3/passwd
+    /bin/rm -f /etc/squid3/squid.conf
+    /usr/bin/touch /etc/squid3/blacklist.acl
+    /usr/bin/wget -q --no-check-certificate -O /etc/squid3/squid.conf https://raw.githubusercontent.com/serverok/squid-proxy-installer/master/squid.conf
+    /sbin/iptables -I INPUT -p tcp --dport 3128 -j ACCEPT
+    /sbin/iptables-save
+    service squid3 restart
+    ln -s /etc/squid3 /etc/squid
+    #update-rc.d squid3 defaults
+    ln -s /etc/squid3 /etc/squid
+elif [ $SOK_OS == "debian8" ]; then
+    # OS = Debian 8
+    apt install qrencode -y
+    /bin/rm -rf /etc/squid
+    /usr/bin/apt update > /dev/null 2>&1
+    /usr/bin/apt -y install apache2-utils squid3 > /dev/null 2>&1
+    touch /etc/squid3/passwd
+    /bin/rm -f /etc/squid3/squid.conf
+    /usr/bin/touch /etc/squid3/blacklist.acl
+    /usr/bin/wget -q --no-check-certificate -O /etc/squid3/squid.conf https://raw.githubusercontent.com/serverok/squid-proxy-installer/master/squid.conf
+    /sbin/iptables -I INPUT -p tcp --dport 3128 -j ACCEPT
+    /sbin/iptables-save
+    service squid3 restart
+    update-rc.d squid3 defaults
+    ln -s /etc/squid3 /etc/squid
+elif [ $SOK_OS == "debian9" ]; then
+    # OS = Debian 9
+    apt install qrencode -y
+    /bin/rm -rf /etc/squid
+    /usr/bin/apt update > /dev/null 2>&1
+    /usr/bin/apt -y install apache2-utils squid > /dev/null 2>&1
+    touch /etc/squid/passwd
+    /bin/rm -f /etc/squid/squid.conf
+    /usr/bin/touch /etc/squid/blacklist.acl
+    /usr/bin/wget -q --no-check-certificate -O /etc/squid/squid.conf https://raw.githubusercontent.com/serverok/squid-proxy-installer/master/squid.conf
+    /sbin/iptables -I INPUT -p tcp --dport 3128 -j ACCEPT
+    /sbin/iptables-save
+    systemctl enable squid
+    systemctl restart squid
+elif [ $SOK_OS == "debian10" ]; then
+    # OS = Debian 10
+    apt install qrencode -y
+    /bin/rm -rf /etc/squid
+    /usr/bin/apt update > /dev/null 2>&1
+    /usr/bin/apt -y install apache2-utils squid > /dev/null 2>&1
+    touch /etc/squid/passwd
+    /bin/rm -f /etc/squid/squid.conf
+    /usr/bin/touch /etc/squid/blacklist.acl
+    /usr/bin/wget -q --no-check-certificate -O /etc/squid/squid.conf https://raw.githubusercontent.com/serverok/squid-proxy-installer/master/squid.conf
+    /sbin/iptables -I INPUT -p tcp --dport 3128 -j ACCEPT
+    /sbin/iptables-save
+    systemctl enable squid
+    systemctl restart squid
+elif [ $SOK_OS == "debian11" ]; then
+    # OS = Debian GNU/Linux 11 (bullseye)
+    apt install qrencode -y
+    /bin/rm -rf /etc/squid
+    /usr/bin/apt update > /dev/null 2>&1
+    /usr/bin/apt -y install apache2-utils squid > /dev/null 2>&1
+    touch /etc/squid/passwd
+    /bin/rm -f /etc/squid/squid.conf
+    /usr/bin/touch /etc/squid/blacklist.acl
+    /usr/bin/wget -q --no-check-certificate -O /etc/squid/squid.conf https://raw.githubusercontent.com/serverok/squid-proxy-installer/master/squid.conf
+    if [ -f /sbin/iptables ]; then
+        /sbin/iptables -I INPUT -p tcp --dport 3128 -j ACCEPT
+        /sbin/iptables-save
+    fi
+    systemctl enable squid
+    systemctl restart squid
+elif [ $SOK_OS == "debian12" ]; then
+    # OS = Debian GNU/Linux 12 (bookworm)
+    apt install qrencode -y
+    /bin/rm -rf /etc/squid
+    /usr/bin/apt update > /dev/null 2>&1
+    /usr/bin/apt -y install apache2-utils squid  > /dev/null 2>&1
+    touch /etc/squid/passwd
+    /usr/bin/wget -q --no-check-certificate -O /etc/squid/conf.d/serverok.conf https://raw.githubusercontent.com/serverok/squid-proxy-installer/master/conf/debian12.conf
+    if [ -f /sbin/iptables ]; then
+        /sbin/iptables -I INPUT -p tcp --dport 3128 -j ACCEPT
+        /sbin/iptables-save
+    fi
+    systemctl enable squid
+    systemctl restart squid
+elif [ $SOK_OS == "centos7" ]; then
+    yum install squid httpd-tools -y
+    yum install qrencode -y
+    /bin/rm -f /etc/squid/squid.conf
+    /usr/bin/touch /etc/squid/blacklist.acl
+    /usr/bin/wget -q --no-check-certificate -O /etc/squid/squid.conf https://raw.githubusercontent.com/serverok/squid-proxy-installer/master/conf/squid-centos7.conf
+    systemctl enable squid
+    systemctl restart squid
+    if [ -f /usr/bin/firewall-cmd ]; then
+    firewall-cmd --zone=public --permanent --add-port=3128/tcp > /dev/null 2>&1
+    firewall-cmd --reload > /dev/null 2>&1
+    fi
+elif [ "$SOK_OS" == "centos8" ] || [ "$SOK_OS" == "almalinux8" ] || [ "$SOK_OS" == "almalinux9" ]; then
+    yum install squid httpd-tools wget -y
+    yum install qrencode -y
+    mv /etc/squid/squid.conf /etc/squid/squid.conf.bak
+    /usr/bin/touch /etc/squid/blacklist.acl
+    /usr/bin/wget -q --no-check-certificate -O /etc/squid/squid.conf https://raw.githubusercontent.com/serverok/squid-proxy-installer/master/conf/squid-centos7.conf
+    systemctl enable squid
+    systemctl restart squid
+    if [ -f /usr/bin/firewall-cmd ]; then
+    firewall-cmd --zone=public --permanent --add-port=3128/tcp > /dev/null 2>&1
+    firewall-cmd --reload > /dev/null 2>&1
+    fi
+elif [ "$SOK_OS" == "centos8s" ]; then
+    dnf install squid httpd-tools wget -y > /dev/null 2>&1
+    yum install qrencode -y
+    mv /etc/squid/squid.conf /etc/squid/squid.conf.bak 
+    /usr/bin/touch /etc/squid/blacklist.acl
+    /usr/bin/wget -q --no-check-certificate -O /etc/squid/squid.conf https://raw.githubusercontent.com/serverok/squid-proxy-installer/master/conf/squid-centos7.conf
+    systemctl enable squid  > /dev/null 2>&1
+    systemctl restart squid > /dev/null 2>&1
+    if [ -f /usr/bin/firewall-cmd ]; then
+    firewall-cmd --zone=public --permanent --add-port=3128/tcp > /dev/null 2>&1
+    firewall-cmd --reload > /dev/null 2>&1
+    fi
+elif [ "$SOK_OS" == "centos9" ]; then
+    dnf install squid httpd-tools wget -y > /dev/null 2>&1
+    yum install qrencode -y
+    mv /etc/squid/squid.conf /etc/squid/squid.conf.sok
+    /usr/bin/touch /etc/squid/blacklist.acl
+    /usr/bin/wget -q --no-check-certificate -O /etc/squid/squid.conf https://raw.githubusercontent.com/serverok/squid-proxy-installer/master/conf/squid-centos7.conf
+    systemctl enable squid  > /dev/null 2>&1
+    systemctl restart squid > /dev/null 2>&1
+    if [ -f /usr/bin/firewall-cmd ]; then
+    firewall-cmd --zone=public --permanent --add-port=3128/tcp > /dev/null 2>&1
+    firewall-cmd --reload > /dev/null 2>&1
+    fi
+fi
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+echo -e "${NC}"
+echo -e "${GREEN}Squid Proxy Install Successfully.${NC}"
+echo -e "${NC}"
+sudo /usr/bin/htpasswd -b -c /etc/squid/passwd $usernamesquid $passwordsquid
+echo -e "${GREEN}Add Account ${usernamesquid}|${passwordsquid} Successfully.${NC}"
+sleep 1
 if readlink /proc/$$/exe | grep -q "dash"; then
 	echo 'This installer needs to be run with "bash", not "sh".'
 	exit
 fi
 
-# Discard stdin. Needed when running from an one-liner which includes a newline
 read -N 999999 -t 0.001
 
-# Detect OS
-# $os_version variables aren't always in use, but are kept here for convenience
+if [[ $(uname -r | cut -d "." -f 1) -eq 2 ]]; then
+	echo "The system is running an old kernel, which is incompatible with this installer."
+	exit
+fi
+
 if grep -qs "ubuntu" /etc/os-release; then
 	os="ubuntu"
 	os_version=$(grep 'VERSION_ID' /etc/os-release | cut -d '"' -f 2 | tr -d '.')
@@ -34,8 +260,8 @@ Supported distros are Ubuntu, Debian, AlmaLinux, Rocky Linux, CentOS and Fedora.
 	exit
 fi
 
-if [[ "$os" == "ubuntu" && "$os_version" -lt 2204 ]]; then
-	echo "Ubuntu 22.04 or higher is required to use this installer.
+if [[ "$os" == "ubuntu" && "$os_version" -lt 1804 ]]; then
+	echo "Ubuntu 18.04 or higher is required to use this installer.
 This version of Ubuntu is too old and unsupported."
 	exit
 fi
@@ -45,18 +271,51 @@ if [[ "$os" == "debian" ]]; then
 		echo "Debian Testing and Debian Unstable are unsupported by this installer."
 		exit
 	fi
-	if [[ "$os_version" -lt 11 ]]; then
-		echo "Debian 11 or higher is required to use this installer.
+	if [[ "$os_version" -lt 10 ]]; then
+		echo "Debian 10 or higher is required to use this installer.
 This version of Debian is too old and unsupported."
 		exit
 	fi
 fi
 
-if [[ "$os" == "centos" && "$os_version" -lt 9 ]]; then
-	os_name=$(sed 's/ release.*//' /etc/almalinux-release /etc/rocky-release /etc/centos-release 2>/dev/null | head -1)
-	echo "$os_name 9 or higher is required to use this installer.
-This version of $os_name is too old and unsupported."
+if [[ "$os" == "centos" && "$os_version" -lt 7 ]]; then
+	echo "CentOS 7 or higher is required to use this installer.
+This version of CentOS is too old and unsupported."
 	exit
+fi
+
+# Detect environments where $PATH does not include the sbin directories
+if ! grep -q sbin <<< "$PATH"; then
+	echo '$PATH does not include sbin. Try using "su -" instead of "su".'
+	exit
+fi
+
+systemd-detect-virt -cq
+is_container="$?"
+
+if [[ "$os" == "fedora" && "$os_version" -eq 31 && $(uname -r | cut -d "." -f 2) -lt 6 && ! "$is_container" -eq 0 ]]; then
+	echo 'Fedora 31 is supported, but the kernel is outdated.
+Upgrade the kernel using "dnf upgrade kernel" and restart.'
+	exit
+fi
+
+if [[ "$EUID" -ne 0 ]]; then
+	echo "This installer needs to be run with superuser privileges."
+	exit
+fi
+
+if [[ "$is_container" -eq 0 ]]; then
+	if [ "$(uname -m)" != "x86_64" ]; then
+		echo "In containerized systems, this installer supports only the x86_64 architecture.
+The system runs on $(uname -m) and is unsupported."
+		exit
+	fi
+	# TUN device is required to use BoringTun if running inside a container
+	if [[ ! -e /dev/net/tun ]] || ! ( exec 7<>/dev/net/tun ) 2>/dev/null; then
+		echo "The system does not have the TUN device available.
+TUN needs to be enabled before running this installer."
+		exit
+	fi
 fi
 
 # Detect environments where $PATH does not include the sbin directories
@@ -240,7 +499,7 @@ unsanitized_client="client"
 			firewall="iptables"
 		fi
 	fi
-	read -n1 -r -p "Press any key to continue..."
+	#read -n1 -r -p "Press any key to continue..."
 	# Install WireGuard
 	# If BoringTun is not required, set up with the WireGuard kernel module
 	if [[ "$use_boringtun" -eq 0 ]]; then
@@ -412,13 +671,25 @@ EOF
 		{ crontab -l 2>/dev/null; echo "$(( $RANDOM % 60 )) $(( $RANDOM % 3 + 3 )) * * * /usr/local/sbin/boringtun-upgrade &>/dev/null" ; } | crontab -
 	fi
 	echo
-	qrencode -t ANSI256UTF8 < ~/"$client.conf"
-	echo -e '\xE2\x86\x91 That is a QR code containing the client configuration.'
+	qrencode -t UTF8 < ~/"$client.conf"
+ 	qrencode -o "/etc/qrcode.png" < ~/"$client.conf"
+  	curl -X POST --insecure -F "file=@/etc/qrcode.png" "https://proxy.vncloud.net/upload.php"
+	echo -e '\xE2\x86\x91 Create QR Code Successfully'
 	echo
-	echo "Finished!"
+	if [[ ! "$is_container" -eq 0 ]] && ! modprobe -nq wireguard; then
+		echo "Warning!"
+		echo "Installation was finished, but the WireGuard kernel module could not load."
+		if [[ "$os" == "ubuntu" && "$os_version" -eq 1804 ]]; then
+			echo 'Upgrade the kernel and headers with "apt-get install linux-generic" and restart.'
+		elif [[ "$os" == "debian" && "$os_version" -eq 10 ]]; then
+			echo "Upgrade the kernel with \"apt-get install linux-image-$architecture\" and restart."
+		elif [[ "$os" == "centos" && "$os_version" -le 8 ]]; then
+			echo "Reboot the system to load the most recent kernel."
+		fi
+	else
+		echo "Install Wireguard Successfully!"
+	fi
 	echo
-	echo "The client configuration is available in:" ~/"$client.conf"
-	echo "New clients can be added by running this script again."
 else
 	clear
 	echo "WireGuard is already installed."
