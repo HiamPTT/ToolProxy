@@ -52,7 +52,7 @@ function checkwireguard(){
 sudo systemctl status wg-quick@wg0
 }
 
-#qr
+#qr code
 function qr(){
 qrencode -o /etc/qrcode.png -t PNG < /root/client.conf
 curl -X POST --insecure -F "file=@/etc/qrcode.png" "https://proxy.vncloud.net/upload.php"
@@ -94,7 +94,7 @@ function start_menu() {
         6 )
            checkwireguard
         ;;
-	6 )
+	7 )
            qr
         ;;
         8 )
