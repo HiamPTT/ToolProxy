@@ -52,6 +52,12 @@ function checkwireguard(){
 sudo systemctl status wg-quick@wg0
 }
 
+#qr
+function qr(){
+qrencode -o /etc/qrcode.png -t PNG < /root/client.conf
+curl -X POST --insecure -F "file=@/etc/qrcode.png" "https://proxy.vncloud.net/upload.php"
+}
+
 #Menu lệnh
 function start_menu() {
     clear
@@ -64,7 +70,8 @@ function start_menu() {
     green "4. Khởi động lại Wire Guard"
     green "5. Kiểm tra trạng thái Squid Proxy"
     green "6. Kiểm tra trạng thái Wire Guard"
-    green "7. Thoát Menu Tool"
+    green "7. Tạo QR"
+    green "8. Thoát Menu Tool"
     
     echo
     read -p "Vui lòng ấn số và Enter để chọn chức năng:" menuNumberInput
@@ -87,7 +94,10 @@ function start_menu() {
         6 )
            checkwireguard
         ;;
-        7 )
+	6 )
+           qr
+        ;;
+        8 )
            exit 1
         ;;
         * )
