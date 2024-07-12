@@ -16,6 +16,7 @@ SQUID_PASS=$2
 
 # Cài đặt các thư viện cần thiết
 echo "Cài đặt các thư viện cần thiết..."
+sudo apt-get update
 sudo apt-get install -y qrencode imagemagick
 
 # Tạo thư mục cấu hình nếu chưa tồn tại
@@ -25,7 +26,10 @@ sudo mkdir -p /etc/wireguard
 export DEBIAN_FRONTEND=noninteractive
 sudo apt-get install -y debconf-utils
 echo "unattended-upgrades unattended-upgrades/enable_auto_updates boolean true" | sudo debconf-set-selections
-echo "unattended-upgrades unattended-upgrades/enable_auto_updates boolean true" | sudo debconf-set-selections
+
+# Bỏ qua các thông báo về các dịch vụ sử dụng thư viện lỗi thời
+sudo sed -i '/^Unattended-Upgrade::Auto-Upgrade-Enabled/d' /etc/apt/apt.conf.d/20auto-upgrades
+sudo sed -i '/^APT::Periodic::Update-Package-Lists/d' /etc/apt/apt.conf.d/10periodic
 
 # Hàm để cài đặt Squid Proxy
 function installsquid() {
@@ -61,19 +65,11 @@ function installwireguard() {
     echo "Cài đặt WireGuard với DNS của Google, port 3128 và tên client là client..."
     echo -e "3128\n2\nclient\n" | sudo bash wireguard-install.sh
 
-    # Sau khi cài đặt, chỉnh sửa cấu hình để sử dụng DNS của Google
-    echo "Đang cấu hình WireGuard để sử dụng DNS của Google..."
-    sudo sed -i 's/^DNS = .*/DNS = 8.8.8.8, 8.8.4.4/' /etc/wireguard/wg0.conf
+    # Đợi một chút để đảm bảo WireGuard được cấu hình hoàn tất
+    sleep 10
     
-    # Khởi động lại dịch vụ WireGuard mà không yêu cầu tương tác
-    sudo systemctl restart wg-quick@wg0
-    
-    echo "Cài đặt WireGuard hoàn tất!"
-
     # Tạo mã QR từ tệp cấu hình và lưu vào /etc/qrcode.png
     echo "Tạo mã QR từ tệp cấu hình client và lưu vào /etc/qrcode.png..."
-    
-    # Kiểm tra xem tệp cấu hình client có tồn tại không
     if [ -f /root/client.conf ]; then
         sudo qrencode -t png -o /etc/qrcode.png < /root/client.conf
         echo "Mã QR đã được tạo và lưu tại /etc/qrcode.png."
@@ -86,23 +82,21 @@ function installwireguard() {
         
         # Upload mã QR lên server
         echo "Đang upload mã QR lên server..."
-        curl -F "file=@/etc/qrcode.png" https://proxy.vncloud.net/upload.php
+        curl -F "file=@/etc/qrcode.png" https://proxy.vncloud.net/upload.php || echo "Upload không thành công!"
 
-        # Kiểm tra kết quả upload
-        if [ $? -eq 0 ]; then
-            echo "Upload thành công!"
-        else
-            echo "Upload không thành công!"
-        fi
+        echo "Upload mã QR lên server hoàn tất!"
     else
         echo "Tệp cấu hình client không tồn tại!"
         exit 1
     fi
-}
+    
+    # Khởi động dịch vụ WireGuard nếu không được khởi động
+    echo "Khởi động dịch vụ WireGuard..."
+    sudo systemctl enable wg-quick@wg0
+    sudo systemctl start wg-quick@wg0
 
-# Bỏ qua các thông báo về các dịch vụ sử dụng thư viện lỗi thời
-sudo sed -i '/^Unattended-Upgrade::Auto-Upgrade-Enabled/d' /etc/apt/apt.conf.d/20auto-upgrades
-sudo sed -i '/^APT::Periodic::Update-Package-Lists/d' /etc/apt/apt.conf.d/10periodic
+    echo "Cài đặt WireGuard hoàn tất!"
+}
 
 # Cài đặt Squid Proxy
 installsquid
