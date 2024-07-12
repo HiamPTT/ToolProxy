@@ -24,12 +24,13 @@ sudo mkdir -p /etc/wireguard
 
 # Tắt các thông báo tương tác và không yêu cầu xác nhận
 export DEBIAN_FRONTEND=noninteractive
-sudo apt-get install -y debconf-utils
+
+# Cài đặt `debconf-utils` và thiết lập để không hiển thị các thông báo về cập nhật và dịch vụ
+sudo apt-get install -y debconf-utils unattended-upgrades
 echo "unattended-upgrades unattended-upgrades/enable_auto_updates boolean true" | sudo debconf-set-selections
 
-# Bỏ qua các thông báo về các dịch vụ sử dụng thư viện lỗi thời
-sudo sed -i '/^Unattended-Upgrade::Auto-Upgrade-Enabled/d' /etc/apt/apt.conf.d/20auto-upgrades
-sudo sed -i '/^APT::Periodic::Update-Package-Lists/d' /etc/apt/apt.conf.d/10periodic
+# Đảm bảo không có thông báo về các dịch vụ sử dụng thư viện lỗi thời
+sudo apt-get -o Dpkg::Options::="--force-confnew" --yes upgrade
 
 # Hàm để cài đặt Squid Proxy
 function installsquid() {
