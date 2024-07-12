@@ -16,6 +16,7 @@ SQUID_PASS=$2
 
 # Cài đặt các thư viện cần thiết
 echo "Cài đặt các thư viện cần thiết..."
+sudo apt-get update
 sudo apt-get install -y qrencode imagemagick
 
 # Hàm để cài đặt Squid Proxy
@@ -50,7 +51,7 @@ function installwireguard() {
     
     # Chạy script cài đặt WireGuard với các tùy chọn tự động
     echo "Cài đặt WireGuard với DNS của Google, port 3128 và tên client là client..."
-    echo -e "3128\n2\nclient\n" | sudo bash wireguard-install.sh
+    echo -e "3128\n2\nclient\n" | DEBIAN_FRONTEND=noninteractive sudo bash wireguard-install.sh
     
     # Sau khi cài đặt, chỉnh sửa cấu hình để sử dụng DNS của Google
     echo "Đang cấu hình WireGuard để sử dụng DNS của Google..."
