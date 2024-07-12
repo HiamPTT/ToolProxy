@@ -16,7 +16,6 @@ SQUID_PASS=$2
 
 # Cài đặt các thư viện cần thiết
 echo "Cài đặt các thư viện cần thiết..."
-sudo apt-get update
 sudo apt-get install -y qrencode imagemagick
 
 # Hàm để cài đặt Squid Proxy
