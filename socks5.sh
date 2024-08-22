@@ -1,44 +1,33 @@
 #!/bin/bash
 
-# Cập nhật danh sách gói và cài đặt Shadowsocks-libev
-echo "Cập nhật danh sách gói và cài đặt Shadowsocks-libev..."
+# Đảm bảo không có quy trình apt/dpkg nào đang chạy
+while sudo fuser /var/lib/dpkg/lock-frontend > /dev/null 2>&1; do
+    echo "Đang chờ khóa dpkg. Vui lòng đợi..."
+    sleep 5
+done
+
+# Cập nhật hệ thống
 sudo apt update
+sudo apt upgrade -y
+
+# Cài đặt Shadowsocks
 sudo apt install -y shadowsocks-libev
 
-# Tạo tệp cấu hình cho Shadowsocks
-CONFIG_FILE="/etc/shadowsocks-libev/config.json"
-echo "Tạo tệp cấu hình Shadowsocks tại $CONFIG_FILE..."
-sudo bash -c "cat > $CONFIG_FILE << EOF
+# Tạo và cấu hình tập tin cấu hình
+cat <<EOF | sudo tee /etc/shadowsocks-libev/config.json
 {
-    \"server\": \"0.0.0.0\",
-    \"server_port\": 8388,
-    \"local_port\": 1080,
-    \"password\": \"147369\",
-    \"timeout\": 300,
-    \"method\": \"aes-256-gcm\",
-    \"fast_open\": true
+    "server": "0.0.0.0",
+    "server_port": 8388,
+    "local_address": "127.0.0.1",
+    "local_port": 1080,
+    "password": "147369",
+    "timeout": 300,
+    "method": "aes-256-gcm"
 }
-EOF"
+EOF
 
-# Tạo tệp cấu hình để hỗ trợ xác thực username/password
-AUTH_CONFIG_FILE="/etc/shadowsocks-libev/auth.json"
-echo "Tạo tệp cấu hình xác thực Shadowsocks tại $AUTH_CONFIG_FILE..."
-sudo bash -c "cat > $AUTH_CONFIG_FILE << EOF
-{
-    \"aqiang\": \"147369\"
-}
-EOF"
+# Khởi động và kích hoạt dịch vụ Shadowsocks
+sudo systemctl start shadowsocks-libev-server
+sudo systemctl enable shadowsocks-libev-server
 
-# Cập nhật tệp cấu hình chính để sử dụng xác thực
-sudo jq '. + { "auth": "/etc/shadowsocks-libev/auth.json" }' $CONFIG_FILE | sudo tee $CONFIG_FILE > /dev/null
-
-# Khởi động dịch vụ Shadowsocks và thiết lập để khởi động cùng hệ thống
-echo "Khởi động dịch vụ Shadowsocks và thiết lập để khởi động cùng hệ thống..."
-sudo systemctl restart shadowsocks-libev
-sudo systemctl enable shadowsocks-libev
-
-# Kiểm tra trạng thái dịch vụ
-echo "Kiểm tra trạng thái dịch vụ Shadowsocks..."
-sudo systemctl status shadowsocks-libev
-
-echo "Cài đặt và cấu hình Shadowsocks hoàn tất!"
+echo "Shadowsocks đã được cài đặt và cấu hình thành công!"
