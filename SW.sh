@@ -23,33 +23,13 @@ sudo systemctl restart shadowsocks-libev
 
 echo "Shadowsocks đã được cài đặt thành công"
 
-if [ $SOK_OS == "ubuntu2204" ]; then
+if [[ "$SOK_OS" =~ ^(ubuntu2204|ubuntu2004|ubuntu1804|ubuntu1604|ubuntu1404|debian8|debian9|debian10|debian11|debian12)$ ]]; then
     apt install qrencode -y
-elif [ $SOK_OS == "ubuntu2004" ]; then
-    apt install qrencode -y
-elif [ $SOK_OS == "ubuntu1804" ]; then
-    apt install qrencode -y
-elif [ $SOK_OS == "ubuntu1604" ]; then
-    apt install qrencode -y
-elif [ $SOK_OS == "ubuntu1404" ]; then
-    apt install qrencode -y
-elif [ $SOK_OS == "debian8" ]; then
-    apt install qrencode -y
-elif [ $SOK_OS == "debian9" ]; then
-    apt install qrencode -y
-elif [ $SOK_OS == "debian10" ]; then
-    apt install qrencode -y
-elif [ $SOK_OS == "debian11" ]; then
-    apt install qrencode -y
-elif [ $SOK_OS == "debian12" ]; then
-    apt install qrencode -y
-elif [ "$SOK_OS" == "centos7" ]; then
+elif [[ "$SOK_OS" == "centos7" ]]; then
     yum install qrencode -y
-elif [ "$SOK_OS" == "centos8" ] || [ "$SOK_OS" == "almalinux8" ] || [ "$SOK_OS" == "almalinux9" ]; then
+elif [[ "$SOK_OS" =~ ^(centos8|almalinux8|almalinux9)$ ]]; then
     yum install qrencode -y
-elif [ "$SOK_OS" == "centos8s" ]; then
-    dnf install qrencode -y
-elif [ "$SOK_OS" == "centos9" ]; then
+elif [[ "$SOK_OS" == "centos8s" || "$SOK_OS" == "centos9" ]]; then
     dnf install qrencode -y
 fi
 
