@@ -22,18 +22,6 @@ sudo systemctl enable shadowsocks-libev
 
 echo "Shadowsocks đã được cài đặt thành công"
 
-if [ ! -f /usr/local/bin/sok-find-os ]; then
-    echo "/usr/local/bin/sok-find-os not found"
-    exit 1
-fi
-
-SOK_OS=$(/usr/local/bin/sok-find-os)
-
-if [ $SOK_OS == "ERROR" ]; then
-    echo "OS NOT SUPPORTED.\n"
-    exit 1;
-fi
-
 if [ $SOK_OS == "ubuntu2204" ]; then
     apt install qrencode -y
 elif [ $SOK_OS == "ubuntu2004" ]; then
