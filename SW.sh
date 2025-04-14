@@ -19,6 +19,7 @@ EOL
 # Khởi động dịch vụ Shadowsocks
 sudo systemctl start shadowsocks-libev
 sudo systemctl enable shadowsocks-libev
+sudo systemctl restart shadowsocks-libev
 
 echo "Shadowsocks đã được cài đặt thành công"
 
